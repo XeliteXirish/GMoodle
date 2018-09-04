@@ -1,0 +1,27 @@
+{
+  "name": "g-moodle",
+  "version": "1.0.0",
+  "description": "Google calender application for moodle assignments",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index"
+  },
+  "keywords": [
+    "moodle",
+    "google",
+    "calender",
+    "assignments"
+  ],
+  "author": "Shaun O'Neill (XeliteXirish)",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "chalk": "^2.4.1",
+    "cors": "^2.8.4",
+    "express": "^4.16.3",
+    "googleapis": "^27.0.0",
+    "mongoose": "^5.2.13",
+    "passport": "^0.4.0",
+    "passport-google-auth": "^1.0.2"
+  }
+}
