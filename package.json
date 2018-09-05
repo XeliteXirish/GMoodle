@@ -20,7 +20,6 @@
     "cookie-session": "^2.0.0-beta.3",
     "cors": "^2.8.4",
     "express": "^4.16.3",
-    "googleapis": "^27.0.0",
     "mongoose": "^5.2.13",
     "passport": "^0.4.0",
     "passport-google-auth": "^1.0.2",
