@@ -50,7 +50,7 @@ function setupAuthRoutes(app) {
         app.get('/auth/google', passport.authenticate('google'));
 
         app.get('/auth/user', (req, res) => {
-            res.json(req.user);
+            res.json(req.user || {err: 'Not logged in!'});
         });
 
         app.get('/auth/google/callback',

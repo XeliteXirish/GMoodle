@@ -1,10 +1,11 @@
 const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
-const {google} = require('googleapis');
 const cors = require('cors');
 const chalk = require('chalk');
 const cookieSession = require('cookie-session');
+
+let utils = require('./utils');
 
 const app = exports.app = express();
 
@@ -59,7 +60,15 @@ function initWeb() {
 }
 
 function setupRoutes() {
+    app.get('/apply', isLoggedIn, async (req, res) => {
+        let calenders = await utils.listCalenders(req.user.token);
+        res.json(calenders);
+    })
+}
 
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) return next();
+    res.redirect('/auth/google');
 }
 
 init();
