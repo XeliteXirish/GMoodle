@@ -75,11 +75,13 @@ exports.listCalenders = async function (accessToken) {
  * We only need the events name to make sure we don't have duplicates
  * @param calenderID {String} - The calender ID to insert the event into
  * @param accessToken {String} - The users google calender access token
+ * @param raw {Boolean} - Send the raw data object from the result
  * @returns {Promise<*>}
  */
-exports.listEvents = async function (calenderID, accessToken) {
+exports.listEvents = async function (calenderID, accessToken, raw = false) {
     try {
-        let res = await axios.get(`https://www.googleapis.com/calendar/v3/calendars/${calenderID}/events?access_token=${accessToken}`)
+        let res = await axios.get(`https://www.googleapis.com/calendar/v3/calendars/${calenderID}/events?access_token=${accessToken}`);
+        if (raw) return res.data;
         return res.data.items.map(ev => ev.summary);
 
     } catch (err) {
@@ -99,13 +101,13 @@ exports.listEvents = async function (calenderID, accessToken) {
  */
 exports.insetEvent = async function (calenderID, title, description, dateTime, accessToken) {
     try {
-
+        console.log(`utils ${dateTime}`);
         let res = await axios.post(`https://www.googleapis.com/calendar/v3/calendars/${calenderID}/events?access_token=${accessToken}`, {
             start: {
-                dateTime: `${dateTime}`
+                dateTime: dateTime
             },
             end: {
-                dateTime: `${dateTime}`
+                dateTime: dateTime
             },
             summary: title,
             description: description

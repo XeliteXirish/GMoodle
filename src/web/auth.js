@@ -1,4 +1,5 @@
-const config = require('../index').config;
+const index = require('../index');
+const config = index.config;
 const schemaUtils = require('../database/schemaUtils');
 
 const passport = require('passport');
@@ -49,7 +50,7 @@ function setupAuthRoutes(app) {
     try {
         app.get('/auth/google', passport.authenticate('google'));
 
-        app.get('/auth/user', (req, res) => {
+        app.get('/auth/user', index.isLoggedIn, (req, res) => {
             res.json(req.user || {err: 'Not logged in!'});
         });
 
@@ -61,6 +62,11 @@ function setupAuthRoutes(app) {
                 res.redirect('/')
             }
         );
+
+        app.get('/logout', index.isLoggedIn, (req, res) => {
+            req.logout();
+            res.redirect('/');
+        })
     } catch (err) {
         // Do something I guess
     }

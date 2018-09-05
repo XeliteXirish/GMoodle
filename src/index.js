@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
 const cookieSession = require('cookie-session');
+const chrono = require('chrono-node');
 
 let utils = require('./utils');
 
@@ -17,6 +18,11 @@ try {
 } catch (err) {
     exports.config = {databaseUrl: '', port: '', debug: false};
 }
+
+exports.isLoggedIn = function (req, res, next) {
+    if (req.isAuthenticated()) return next();
+    res.redirect('/auth/google');
+};
 
 function init() {
     require('./database/driver').connect();
@@ -61,11 +67,31 @@ function initWeb() {
 
 function setupRoutes() {
 
-    app.get('/', isLoggedIn, (req, res) => {
-        res.send('ok');
+    app.get('/', exports.isLoggedIn, (req, res) => {
+        res.render('index', {
+            user: req.user
+        });
     });
 
-    app.post('/apply', isLoggedIn, async (req, res) => {
+    app.get('/listevents', exports.isLoggedIn, async (req, res) => {
+        try {
+
+            let accessToken = req.user.token;
+            if (!accessToken) return res.status(403).send(`No access token!`);
+
+            // Check if the google calender exists or create it
+            let calender = await utils.getEventCalender(accessToken);
+            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
+            let calenderID = calender.id;
+
+            return res.status(200).json(await utils.listEvents(calenderID, accessToken, true));
+
+        } catch (err) {
+            console.error(`Error trying to fetch events, Error: ${err.stack}`);
+        }
+    });
+
+    app.post('/apply', exports.isLoggedIn, async (req, res) => {
         try {
             let moodleUsername = req.body.musername;
             let moodlePassword = req.body.mpassword;
@@ -78,7 +104,7 @@ function setupRoutes() {
 
             // Check if the google calender exists or create it
             let calender = await utils.getEventCalender(accessToken);
-            if (!calender) return res.status(500).send(`Unable to create calender!`);
+            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
             let calenderID = calender.id;
 
             // Get the users current events to make sure we don't add duplicates, dont care about the length
@@ -91,24 +117,18 @@ function setupRoutes() {
             for (let ass of assignments) {
 
                 // We gota parse the date, Format = Friday, 7 September, 5:00 PM
-                let dateTime = new Date(`${ass.date}, 2018`).toISOString();
+                let dateTime = new Date(chrono.parseDate(`${ass.date}, 2018`)).toISOString();
 
                 // Check if its a duplicate, if it doesn't insert it'll try again on next try
                 if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
                 });
             }
 
+            res.status(200).send(`Events have been successfully added to calender!`);
+
         } catch (err) {
             console.error(`Error trying to apply events, Error: ${err.stack}`);
         }
-
-
     })
 }
-
-function isLoggedIn(req, res, next) {
-    if (req.isAuthenticated()) return next();
-    res.redirect('/auth/google');
-}
-
 init();
