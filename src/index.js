@@ -16,7 +16,7 @@ const noteError = chalk.red(`[!]`);
 try {
     exports.config = require('../config');
 } catch (err) {
-    exports.config = {databaseUrl: '', port: '', debug: false};
+    throw `You must supply a config file! Copy the example ex_config.js to config.js!`;
 }
 
 exports.isLoggedIn = function (req, res, next) {
