@@ -65,33 +65,21 @@ function setupRoutes() {
         res.send('ok');
     });
 
-    app.post('/test', async (req, res) => {
-        let moodleUsername = req.body.musername;
-        let moodlePassword = req.body.mpassword;
-        let moodleURL = req.body.murl;
-        let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
-        res.json(assignments);
-    })
-
-    app.get('/apply', isLoggedIn, async (req, res) => {
+    app.post('/apply', isLoggedIn, async (req, res) => {
         try {
-            let moodleUsername = req.query.musername; //TODO change these back to req.body for post request
-            let moodlePassword = req.query.mpassword;
-            let moodleURL = req.query.murl;
+            let moodleUsername = req.body.musername;
+            let moodlePassword = req.body.mpassword;
+            let moodleURL = req.body.murl;
 
             if (!moodleUsername || !moodlePassword || !moodleURL) return res.status(403).send(`You must submit a muasname, mpassword and murl in the body!`);
 
             let accessToken = req.user.token;
             if (!accessToken) return res.status(403).send(`No access token!`);
 
-            console.log(`[DEBUG] Past token check`);
-
             // Check if the google calender exists or create it
             let calender = await utils.getEventCalender(accessToken);
             if (!calender) return res.status(500).send(`Unable to create calender!`);
             let calenderID = calender.id;
-
-            console.log(`[DEBUG] Past calender creation, ID: ${calenderID}`)
 
             // Get the users current events to make sure we don't add duplicates, dont care about the length
             let userEvents = await utils.listEvents(calenderID, accessToken);
@@ -101,18 +89,14 @@ function setupRoutes() {
             if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
 
             for (let ass of assignments) {
-                // Name, Course, Date, Description
 
-                console.log(`[DEBUG] Assign ${ass.name}`);
                 // We gota parse the date, Format = Friday, 7 September, 5:00 PM
                 let dateTime = new Date(`${ass.date}, 2018`).toISOString();
 
-                // Check if its a duplicate
+                // Check if its a duplicate, if it doesn't insert it'll try again on next try
                 if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
                 });
-                else console.log(`[DEBUG] Duplicate found, not addding ${ass.name}`);
             }
-
 
         } catch (err) {
             console.error(`Error trying to apply events, Error: ${err.stack}`);

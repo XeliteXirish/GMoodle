@@ -15,7 +15,7 @@ exports.getEventCalender = async function (accessToken) {
         for (let cal of calenders) {
             if (cal.name === index.config.calenderName) return cal;
         }
-        console.log(`[DEBUG] Calender not found, creating`);
+
         // If its not defined by here we need to create
         let calObj = await createCalender(index.config.calenderName, accessToken);
         return {
@@ -45,6 +45,7 @@ async function createCalender(calenderName, accessToken) {
         return res.data;
     } catch (err) {
         console.error(`Error creating calender, Error: ${err}`);
+        if (err.response) console.error(err.response.data)
     }
 }
 
@@ -65,14 +66,15 @@ exports.listCalenders = async function (accessToken) {
             }
         });
     } catch (err) {
-        console.error(`Error listing calenders, Error: ${err.stack}`);
+        console.error(`Error listing calenders, Error: ${err}`);
+        if (err.response) console.error(err.response.data)
     }
 };
 
 /**
  * We only need the events name to make sure we don't have duplicates
- * @param calenderID
- * @param accessToken
+ * @param calenderID {String} - The calender ID to insert the event into
+ * @param accessToken {String} - The users google calender access token
  * @returns {Promise<*>}
  */
 exports.listEvents = async function (calenderID, accessToken) {
@@ -81,7 +83,8 @@ exports.listEvents = async function (calenderID, accessToken) {
         return res.data.items.map(ev => ev.summary);
 
     } catch (err) {
-        console.error(`Unable to list calender events, Error: ${err.stack}`);
+        console.error(`Unable to list calender events, Error: ${err}`);
+        if (err.response) console.error(err.response.data)
     }
 };
 
