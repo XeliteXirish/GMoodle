@@ -15,14 +15,15 @@
   "author": "Shaun O'Neill (XeliteXirish)",
   "license": "ISC",
   "dependencies": {
+    "axios": "latest",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.1",
     "cookie-session": "^2.0.0-beta.3",
     "cors": "^2.8.4",
+    "elite-moodle-scraper": "^1.0.5",
     "express": "^4.16.3",
     "mongoose": "^5.2.13",
     "passport": "^0.4.0",
-    "passport-google-auth": "^1.0.2",
-    "axios": "latest"
+    "passport-google-auth": "^1.0.2"
   }
 }

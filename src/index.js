@@ -60,9 +60,59 @@ function initWeb() {
 }
 
 function setupRoutes() {
+
+    app.get('/', isLoggedIn, (req, res) => {
+        res.send('ok');
+    });
+
+    app.post('/test', async (req, res) => {
+        let moodleUsername = req.body.musername;
+        let moodlePassword = req.body.mpassword;
+        let moodleURL = req.body.murl;
+        let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
+        res.json(assignments);
+    })
+
     app.get('/apply', isLoggedIn, async (req, res) => {
-        let calenders = await utils.listCalenders(req.user.token);
-        res.json(calenders);
+        try {
+            let moodleUsername = req.query.musername; //TODO change these back to req.body for post request
+            let moodlePassword = req.query.mpassword;
+            let moodleURL = req.query.murl;
+
+            if (!moodleUsername || !moodlePassword || !moodleURL) return res.status(403).send(`You must submit a muasname, mpassword and murl in the body!`);
+
+            let accessToken = req.user.token;
+            if (!accessToken) return res.status(403).send(`No access token!`);
+
+            console.log(`[DEBUG] Past token check`);
+
+            // Check if the google calender exists or create it
+            let calender = await utils.getEventCalender(accessToken);
+            if (!calender) return res.status(500).send(`Unable to create calender!`);
+            let calenderID = calender.id;
+
+            console.log(`[DEBUG] Past calender creation, ID: ${calenderID}`)
+
+            // Gets users assignments
+            let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
+            console.log(`${moodleUsername} - ${moodlePassword} - ${moodleURL}`);
+            if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
+            for (let ass of assignments) {
+                // Name, Course, Date, Description
+
+                console.log(`[DEBUG] Assign ${ass.name}`);
+                // We gota parse the date, Format = Friday, 7 September, 5:00 PM
+                let dateTime = new Date(`${ass.date}, 2018`).toISOString();
+
+                let res = await utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken)
+            }
+
+
+        } catch (err) {
+            console.error(`Error trying to apply events, Error: ${err.stack}`);
+        }
+
+
     })
 }
 

@@ -58,7 +58,7 @@ function setupAuthRoutes(app) {
                 failureRedirect: '/'
             }),
             (req, res) => {
-                res.redirect('/auth/user')
+                res.redirect('/')
             }
         );
     } catch (err) {
