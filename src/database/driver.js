@@ -8,12 +8,13 @@ exports.connect = function () {
     try {
 
         // Connect
-        mongoose.connect(index.config.db_url, {
+        mongoose.connect(index.config.databaseUrl, {
             autoReconnect: true,
             connectTimeoutMS: 30000,
             socketTimeoutMS: 30000,
             keepAlive: 120,
-            poolSize: 100
+            poolSize: 100,
+            useNewUrlParser: true
         }, (err) => {
             if (err) console.error('Mongo couldnt connect to database! Fix!');
         });

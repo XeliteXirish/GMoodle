@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const {google} = require('googleapis');
 const cors = require('cors');
 const chalk = require('chalk');
+const cookieSession = require('cookie-session');
 
 const app = exports.app = express();
 
@@ -16,6 +17,11 @@ try {
     exports.config = {databaseUrl: '', port: '', debug: false};
 }
 
+function init() {
+    require('./database/driver').connect();
+    initWeb();
+}
+
 function initWeb() {
 
     app.use(bodyParser.json());
@@ -23,6 +29,12 @@ function initWeb() {
     app.use(express.static('Web'));
     app.set('view engine', 'ejs');
     app.use(cors());
+
+    app.use(cookieSession({
+        name: 'loginSession',
+        keys: ['gmoodle', exports.config.session_secret],
+        maxAge: 2 * 60 * 60 * 1000 //48 Hours
+    }));
 
     app.use('/', express.static(`${__dirname}/web/static`));
     app.set('views', `${__dirname}/web/views/`);
@@ -50,4 +62,4 @@ function setupRoutes() {
 
 }
 
-initWeb();
+init();

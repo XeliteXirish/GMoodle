@@ -3,19 +3,12 @@ const schemaUtils = require('../database/schemaUtils');
 
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-auth').Strategy;
-const cookieSession = require('cookie-session');
 
 const SCOPES = ['https://www.googleapis.com/auth/calendar', 'profile'];
 
 exports.init = function (app) {
     app.use(passport.initialize());
     app.use(passport.session());
-
-    app.use(cookieSession({
-        name: 'loginSession',
-        keys: ['gmoodle', config.session_secret],
-        maxAge: 2 * 60 * 60 * 1000 //48 Hours
-    }));
 
     passport.serializeUser(function (user, done) {
         done(null, user);
@@ -38,7 +31,6 @@ exports.init = function (app) {
 
         },
         (token, refreshToken, profile, done) => {
-            console.log(token);
 
             schemaUtils.saveUser(profile.id, profile.displayName, profile.image.url, profile.gender, profile.url).catch(err => {
                 // Umm do something in the comments :D #NoError
@@ -58,15 +50,15 @@ function setupAuthRoutes(app) {
         app.get('/auth/google', passport.authenticate('google'));
 
         app.get('/auth/user', (req, res) => {
-            res.json(req.user || {err: 'Not logged in'});
+            res.json(req.user);
         });
 
         app.get('/auth/google/callback',
             passport.authenticate('google', {
-                failureRedirect: '/auth/user'
+                failureRedirect: '/'
             }),
             (req, res) => {
-                res.redirect('/')
+                res.redirect('/auth/user')
             }
         );
     } catch (err) {

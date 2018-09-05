@@ -3,7 +3,7 @@ const driver = require('./driver');
 exports.fetchUser = async function (userID) {
     try {
         let user = await driver.getModals().Account.findOne({id: userID});
-        if (!user) return {};
+        if (!user) return null;
         return user;
     } catch (e) {
         console.error(`Unable to fetch user with ID: ${userID}`);
@@ -37,7 +37,6 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL) {
             let newUser = new driver.getModals().Account({
                 id: userID,
                 name: name,
-                email: email,
                 picture: picture,
                 gender: gender,
                 plusURL: plusURL
