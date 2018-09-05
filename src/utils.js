@@ -70,6 +70,22 @@ exports.listCalenders = async function (accessToken) {
 };
 
 /**
+ * We only need the events name to make sure we don't have duplicates
+ * @param calenderID
+ * @param accessToken
+ * @returns {Promise<*>}
+ */
+exports.listEvents = async function (calenderID, accessToken) {
+    try {
+        let res = await axios.get(`https://www.googleapis.com/calendar/v3/calendars/${calenderID}/events?access_token=${accessToken}`)
+        return res.data.items.map(ev => ev.summary);
+
+    } catch (err) {
+        console.error(`Unable to list calender events, Error: ${err.stack}`);
+    }
+};
+
+/**
  * Inserts an event into the users google calender
  * @param calenderID {String} - The calender ID to insert the event into
  * @param title {String} - The title of the event, the assignment title

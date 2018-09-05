@@ -93,10 +93,13 @@ function setupRoutes() {
 
             console.log(`[DEBUG] Past calender creation, ID: ${calenderID}`)
 
+            // Get the users current events to make sure we don't add duplicates, dont care about the length
+            let userEvents = await utils.listEvents(calenderID, accessToken);
+
             // Gets users assignments
             let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
-            console.log(`${moodleUsername} - ${moodlePassword} - ${moodleURL}`);
             if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
+
             for (let ass of assignments) {
                 // Name, Course, Date, Description
 
@@ -104,7 +107,10 @@ function setupRoutes() {
                 // We gota parse the date, Format = Friday, 7 September, 5:00 PM
                 let dateTime = new Date(`${ass.date}, 2018`).toISOString();
 
-                let res = await utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken)
+                // Check if its a duplicate
+                if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
+                });
+                else console.log(`[DEBUG] Duplicate found, not addding ${ass.name}`);
             }
 
 
