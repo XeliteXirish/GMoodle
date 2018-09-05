@@ -33,6 +33,12 @@
                 <h3 class="title text-offwhite is-1">&bull;&nbsp;Moodle Account Login&nbsp;&bull;</h3>
                 <p class="subtitle text-offwhite">We require your moodle login to list your due assignments, please
                     login to proceed.</p>
+
+                <div id="infoNotification" class="notification is-primary" style="display: none;">
+                    <button class="delete" onclick="toggleNotification(false)"></button>
+                    <p id="infoText"></p>
+                </div>
+
                 <div class="box">
                     <figure class="avatar">
                         <img src="<%- user.profile.image.url.replace('?sz=50', '?sz=200') %>">

@@ -114,6 +114,8 @@ function setupRoutes() {
             let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
             if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
 
+            console.info(`${notification} Added events for user ${chalk.bold(req.user.profile.displayName)}`);
+
             for (let ass of assignments) {
 
                 // We gota parse the date, Format = Friday, 7 September, 5:00 PM
