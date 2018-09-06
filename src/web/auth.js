@@ -28,6 +28,7 @@ exports.init = function (app) {
             clientSecret: config.client_secret,
             callbackURL: config.callback_url,
             scope: SCOPES,
+            accessType: 'offline',
             skipUserProfile: false
 
         },
