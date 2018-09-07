@@ -31,6 +31,8 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL, refre
             user.gender = gender;
             user.plusURL = plusURL;
 
+            if (refreshToken) user.refreshToken = refreshToken;
+
             // Don't want to update refresh token since we only get it once
 
             user.save();

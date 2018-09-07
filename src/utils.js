@@ -101,7 +101,6 @@ exports.listEvents = async function (calenderID, accessToken, raw = false) {
  */
 exports.insetEvent = async function (calenderID, title, description, dateTime, accessToken) {
     try {
-        console.log(`utils ${dateTime}`);
         let res = await axios.post(`https://www.googleapis.com/calendar/v3/calendars/${calenderID}/events?access_token=${accessToken}`, {
             start: {
                 dateTime: dateTime
@@ -169,14 +168,14 @@ exports.getAccessToken = async function (refreshToken) {
     try {
         if (!refreshToken) return false;
 
-        let res = await res.post(`https://www.googleapis.com/oauth2/v4/token`, {
+        let res = await axios.post(`https://www.googleapis.com/oauth2/v4/token`, {
             client_id: index.config.client_id,
             client_secret: index.config.client_secret,
             refresh_token: refreshToken,
             grant_type: 'refresh_token'
         });
 
-        if (res.status === 200) return res.data;
+        if (res.status === 200) return res.data.access_token;
         else return false;
     } catch (err) {
         console.error(`Unable to fetch new access token, Error: ${err.stack}`);
@@ -184,3 +183,27 @@ exports.getAccessToken = async function (refreshToken) {
         return false;
     }
 };
+
+/**
+ * Returns the difference in days between the last applied date
+ * @param lastApplied {Date} - The last applied date for a user
+ * @returns {number} - The number of days since last apply
+ */
+exports.calDaysDifferent = function (lastApplied) {
+    return Math.ceil(Math.abs(new Date().getTime() - lastApplied.getTime()) / (1000 * 3600 * 24));
+};
+
+exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, refreshToken) {
+    try {
+
+        // We're just going to send a request to our own endpoint! #CodeDuplication
+        axios.post('/apply', {
+            musername: moodleUsername,
+            mpassword: moodlePassword,
+            murl: moodleURL
+        })
+
+    } catch (err) {
+        console.error(`Unable to automatically run apply for ID: ${userID}, Error: ${err.stack}`);
+    }
+}

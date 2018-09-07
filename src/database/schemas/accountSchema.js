@@ -7,7 +7,10 @@ const AccountSchema = new mongoose.Schema({
     gender: {type: String},
     plusURL: {type: String},
     isAdmin: {type: Boolean, default: false},
-    refreshToken: {type: String}
+    refreshToken: {type: String},
+    numApplication: {type: Number, default: 0},
+    automaticApplication: {type: Boolean, default: false},
+    lastApplied: {type: Date}
 });
 
 module.exports = AccountSchema;
