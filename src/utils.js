@@ -196,12 +196,7 @@ exports.calDaysDifferent = function (lastApplied) {
 exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, refreshToken) {
     try {
 
-        // We're just going to send a request to our own endpoint! #CodeDuplication
-        axios.post('/apply', {
-            musername: moodleUsername,
-            mpassword: moodlePassword,
-            murl: moodleURL
-        })
+        //TODO Just move all the /apply code into here and use /apply ot call this func
 
     } catch (err) {
         console.error(`Unable to automatically run apply for ID: ${userID}, Error: ${err.stack}`);
