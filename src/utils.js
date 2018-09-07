@@ -38,7 +38,6 @@ exports.getEventCalender = async function (accessToken) {
  */
 async function createCalender(calenderName, accessToken) {
     try {
-        console.log(accessToken);
         let res = await axios.post(`https://www.googleapis.com/calendar/v3/calendars?access_token=${accessToken}`, {
             summary: calenderName,
         });
@@ -86,7 +85,8 @@ exports.listEvents = async function (calenderID, accessToken, raw = false) {
 
     } catch (err) {
         console.error(`Unable to list calender events, Error: ${err}`);
-        if (err.response) console.error(err.response.data)
+        if (err.response) console.error(err.response.data);
+        return false;
     }
 };
 
@@ -117,7 +117,7 @@ exports.insetEvent = async function (calenderID, title, description, dateTime, a
 
     } catch (err) {
         console.error(`Error creating new event, Error: ${err}`);
-        if (err.response) console.error(err.response.data)
+        if (err.response) console.error(err.response.data);
     }
 };
 
@@ -138,6 +138,49 @@ exports.getAssignments = async function (username, password, moodleURL) {
 
     } catch (err) {
         console.error(`Error fetching moodle user, Error: ${err.stack}`);
+        return false;
     }
 };
 
+/**
+ * Verify's the google account is still valid
+ * @param {String} accessToken - The current users access token
+ * @returns {Promise<boolean>} - If the user is still valid
+ */
+exports.checkAccessToken = async function (accessToken) {
+    try {
+        if (!accessToken) return false;
+        let res = await axios.post(`https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`);
+
+        return res.status === 400;
+    } catch (err) {
+        console.error(`Unable to verify google account, Error: ${err.stack}`);
+        if (err.response) console.error(err.response.data);
+        return false;
+    }
+};
+
+/**
+ * Fetches a new access token for a user
+ * @param refreshToken - The refresh token for a user
+ * @returns {Promise<>} - The new access token for the user
+ */
+exports.getAccessToken = async function (refreshToken) {
+    try {
+        if (!refreshToken) return false;
+
+        let res = await res.post(`https://www.googleapis.com/oauth2/v4/token`, {
+            client_id: index.config.client_id,
+            client_secret: index.config.client_secret,
+            refresh_token: refreshToken,
+            grant_type: 'refresh_token'
+        });
+
+        if (res.status === 200) return res.data;
+        else return false;
+    } catch (err) {
+        console.error(`Unable to fetch new access token, Error: ${err.stack}`);
+        if (err.response) console.error(err.response.data);
+        return false;
+    }
+};

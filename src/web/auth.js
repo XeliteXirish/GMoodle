@@ -34,7 +34,7 @@ exports.init = function (app) {
         },
         (token, refreshToken, profile, done) => {
 
-            schemaUtils.saveUser(profile.id, profile.displayName, profile.image.url, profile.gender, profile.url).catch(err => {
+            schemaUtils.saveUser(profile.id, profile.displayName, profile.image.url, profile.gender, profile.url, refreshToken).catch(err => {
                 // Umm do something in the comments :D #NoError
             });
 

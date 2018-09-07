@@ -17,9 +17,10 @@ exports.fetchUser = async function (userID) {
  * @param picture
  * @param gender
  * @param plusURL
+ * @param refreshToken
  * @returns {Promise<void>}
  */
-exports.saveUser = async function (userID, name, picture, gender, plusURL) {
+exports.saveUser = async function (userID, name, picture, gender, plusURL, refreshToken) {
     try {
         // See if user exists
         let user = await exports.fetchUser(userID);
@@ -30,6 +31,8 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL) {
             user.gender = gender;
             user.plusURL = plusURL;
 
+            // Don't want to update refresh token since we only get it once
+
             user.save();
 
         } else {
@@ -39,7 +42,8 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL) {
                 name: name,
                 picture: picture,
                 gender: gender,
-                plusURL: plusURL
+                plusURL: plusURL,
+                refreshToken: refreshToken
             });
 
             newUser.save();

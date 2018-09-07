@@ -6,11 +6,13 @@ const chalk = require('chalk');
 const cookieSession = require('cookie-session');
 const chrono = require('chrono-node');
 
-let utils = require('./utils');
+const utils = require('./utils');
+const schemaUtils = require('./database/schemaUtils');
 
 const app = exports.app = express();
 
 const notification = chalk.green(`[!]`);
+const noteUser = chalk.green(`[~${chalk.red('!')}~]`);
 const noteError = chalk.red(`[!]`);
 
 try {
@@ -73,24 +75,6 @@ function setupRoutes() {
         });
     });
 
-    app.get('/listevents', exports.isLoggedIn, async (req, res) => {
-        try {
-
-            let accessToken = req.user.token;
-            if (!accessToken) return res.status(403).send(`No access token!`);
-
-            // Check if the google calender exists or create it
-            let calender = await utils.getEventCalender(accessToken);
-            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
-            let calenderID = calender.id;
-
-            return res.status(200).json(await utils.listEvents(calenderID, accessToken, true));
-
-        } catch (err) {
-            console.error(`Error trying to fetch events, Error: ${err.stack}`);
-        }
-    });
-
     app.post('/apply', exports.isLoggedIn, async (req, res) => {
         try {
             let moodleUsername = req.body.musername;
@@ -101,6 +85,14 @@ function setupRoutes() {
 
             let accessToken = req.user.token;
             if (!accessToken) return res.status(403).send(`No access token!`);
+
+            // We'll check if their token is any good
+            let validToken = await utils.checkAccessToken(accessToken);
+            if (!validToken) {
+                let userObj = await schemaUtils.fetchUser(req.user.profile.id);
+                if (!userObj) return res.status(500).send(`Unable to apply, no user object was found saved with a valid refresh token, try logging out and logging back in!`);
+                accessToken = await utils.getAccessToken(userObj.refreshToken);
+            }
 
             // Check if the google calender exists or create it
             let calender = await utils.getEventCalender(accessToken);
@@ -114,7 +106,7 @@ function setupRoutes() {
             let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
             if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
 
-            console.info(`${notification} Added events for user ${chalk.bold(req.user.profile.displayName)}`);
+            console.info(`${noteUser} Added events for user ${chalk.bold(req.user.profile.displayName)}`);
 
             for (let ass of assignments) {
 
@@ -126,7 +118,7 @@ function setupRoutes() {
                 });
             }
 
-            res.status(200).send(`Events have been successfully added to calender!`);
+            res.status(200).send(`Events have been successfully added ${assignments.length} to the calender!`);
 
         } catch (err) {
             console.error(`Error trying to apply events, Error: ${err.stack}`);
