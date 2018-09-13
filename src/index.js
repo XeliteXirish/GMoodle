@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
 const cookieSession = require('cookie-session');
-const chrono = require('chrono-node');
 
 const utils = require('./utils');
 const schemaUtils = require('./database/schemaUtils');
@@ -12,7 +11,6 @@ const schemaUtils = require('./database/schemaUtils');
 const app = exports.app = express();
 
 const notification = chalk.green(`[!]`);
-const noteUser = chalk.green(`[~${chalk.red('!!')}~]`);
 const noteError = chalk.red(`[!]`);
 
 try {
@@ -86,46 +84,14 @@ function setupRoutes() {
             let accessToken = req.user.token || req.body.access_token;
             if (!accessToken) return res.status(403).send(`No access token!`);
 
-            // We'll check if their token is any good, get a user object anyways because we need it
-            let validToken = await utils.checkAccessToken(accessToken);
-            let userObj = await schemaUtils.fetchUser(req.user.profile.id);
-            if (!userObj) return res.status(500).send(`Unable to apply, no user object was found saved with a valid refresh token, try logging out and logging back in!`);
+            let userID = req.user.profile.id;
 
-            if (!validToken) {
-                // TODO should probably add it back to the req.user object but lazy
-                accessToken = await utils.getAccessToken(userObj.refreshToken);
+            let res = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, accessToken);
+            if (!res.suc) {
+                return res.status(500).json(res);
             }
 
-            // Check if the google calender exists or create it
-            let calender = await utils.getEventCalender(accessToken);
-            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
-            let calenderID = calender.id;
-
-            // Get the users current events to make sure we don't add duplicates, dont care about the length
-            let userEvents = await utils.listEvents(calenderID, accessToken);
-
-            // Gets users assignments
-            let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
-            if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
-
-            console.info(`${noteUser} Added ${chalk.red(assignments.length)} events for user ${chalk.bold(req.user.profile.displayName)}`);
-
-            for (let ass of assignments) {
-
-                // We gota parse the date, Format = Friday, 7 September, 5:00 PM
-                let dateTime = new Date(chrono.parseDate(`${ass.date}, ${new Date().getFullYear()}`)).toISOString();
-
-                // Check if its a duplicate, if it doesn't insert it'll try again on next try
-                if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
-                });
-            }
-
-            // Update the users last applied date and increment uses count
-            userObj.lastApplied = new Date().toISOString();
-            userObj.numApplication++;
-            userObj.save();
-
-            res.status(200).send(`${assignments.length} Events have been successfully added to the calender!`);
+            res.status(200).send(`Events have been successfully added to the calender!`);
 
         } catch (err) {
             console.error(`Error trying to apply events, Error: ${err.stack}`);

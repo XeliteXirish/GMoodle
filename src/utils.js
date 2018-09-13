@@ -1,7 +1,14 @@
 const index = require('./index');
+const schemaUtils = require('./database/schemaUtils');
 
 const axios = require('axios');
+const chrono = require('chrono-node');
+const chalk = require('chalk');
+const schedule = require('node-schedule');
 const MoodleUser = require('elite-moodle-scraper').MoodleUser;
+
+const notification = chalk.green(`[!]`);
+const noteUser = chalk.green(`[~${chalk.red('!!')}~]`);
 
 /**
  * Returns the calender with the name in config or creates one
@@ -193,12 +200,76 @@ exports.calDaysDifferent = function (lastApplied) {
     return Math.ceil(Math.abs(new Date().getTime() - lastApplied.getTime()) / (1000 * 3600 * 24));
 };
 
-exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, refreshToken) {
+exports.startSchedule = function (time) {
     try {
 
-        //TODO Just move all the /apply code into here and use /apply ot call this func
+        let sch = schedule.scheduleJob(time, function () {
+            console.info(`${notification} Running auto apply for all users, Time: ${new Date().toISOString()}`);
+
+
+        })
+
+    } catch (err) {
+        console.error(`Unable to start auto apply schedule, Error: ${err.stack}`);
+    }
+};
+
+/**
+ * Runs the application and adds all events to the users calender
+ * @param userID {String} - The users ID
+ * @param moodleUsername {String} - The moodle username of the user
+ * @param moodlePassword {String} - The moodle password of the user
+ * @param moodleURL {String} - The base url for the users moodle site
+ * @param accessToken - The access token for the users google account
+ * @returns {Promise<Object>} - Object with key 'suc' and error message 'msg'
+ */
+exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, accessToken) {
+    try {
+
+        let userObj = await schemaUtils.fetchUser(userID);
+        if (!userObj) return {
+            suc: false,
+            msg: `Unable to apply, no user object was found saved with a valid refresh token, try logging out and logging back in!`
+        };
+
+        // We'll check if their token is any good
+        let validToken = await utils.checkAccessToken(accessToken);
+        if (!validToken) {
+            accessToken = await utils.getAccessToken(userObj.refreshToken);
+        }
+
+        // Check if the google calender exists or create it
+        let calender = await utils.getEventCalender(accessToken);
+        if (!calender) return {suc: false, msg: `Unable to fetch calender!`};
+        let calenderID = calender.id;
+
+        // Get the users current events to make sure we don't add duplicates, dont care about the length
+        let userEvents = await utils.listEvents(calenderID, accessToken);
+
+        // Gets users assignments
+        let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
+        if (!assignments) return {suc: false, msg: `Unable to log into moodle with the supplied credentials!`};
+
+        console.info(`${noteUser} Added ${chalk.red(assignments.length)} events for user ${chalk.bold(req.user.profile.displayName)}`);
+
+        for (let ass of assignments) {
+
+            // We gota parse the date, Format = Friday, 7 September, 5:00 PM
+            let dateTime = new Date(chrono.parseDate(`${ass.date}, ${new Date().getFullYear()}`)).toISOString();
+
+            // Check if its a duplicate, if it doesn't insert it'll try again on next try
+            if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
+            });
+        }
+
+        // Update the users last applied date and increment uses count
+        userObj.lastApplied = new Date().toISOString();
+        userObj.numApplication++;
+        userObj.save();
+
+        return {suc: true};
 
     } catch (err) {
         console.error(`Unable to automatically run apply for ID: ${userID}, Error: ${err.stack}`);
     }
-}
+};
