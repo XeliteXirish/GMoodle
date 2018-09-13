@@ -1,15 +1,16 @@
 const mongoose = require('mongoose');
 
+const userProfile = require('./userProfileSchema');
+const moodleSettings = require('./moodleSettingsSchema');
+
 const AccountSchema = new mongoose.Schema({
     id: {type: String},
-    name: {type: String},
-    picture: {type: String},
-    gender: {type: String},
-    plusURL: {type: String},
+    profile: userProfile,
     isAdmin: {type: Boolean, default: false},
     refreshToken: {type: String},
-    numApplication: {type: Number, default: 0},
-    automaticApplication: {type: Boolean, default: false},
+    numApplications: {type: Number, default: 0},
+    autoApply: {type: Boolean, default: false},
+    moodleSettings: moodleSettings,
     lastApplied: {type: Date}
 });
 

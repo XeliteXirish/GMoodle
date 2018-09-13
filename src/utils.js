@@ -203,10 +203,29 @@ exports.calDaysDifferent = function (lastApplied) {
 exports.startSchedule = function (time) {
     try {
 
-        let sch = schedule.scheduleJob(time, function () {
+        let sch = schedule.scheduleJob(time, async function () {
             console.info(`${notification} Running auto apply for all users, Time: ${new Date().toISOString()}`);
 
+            let allUsers = await schemaUtils.fetchAllUsers();
+            if (!allUsers) return;
+            for (let user of allUsers) {
+                // Check if the user has auto apply enabled
+                if (!user.autoApply) continue;
 
+                let moodleUsername = user.moodleSettings.moodleUsername;
+                let moodlePassword = user.moodleSettings.moodlePassword;
+                let moodleUrl = user.moodleSettings.moodleURL;
+
+                // Get a new access token for the user
+                if (!user.refreshToken) continue;
+                let accessToken = exports.getAccessToken(user.refreshToken);
+
+                if (!moodleUsername || !moodlePassword || !moodleUrl || !accessToken) continue;
+
+                exports.runApply(user.id, moodleUsername, moodlePassword, moodleUrl, accessToken).catch(() => {
+                    // Dont care it'll try again in a week
+                });
+            }
         })
 
     } catch (err) {

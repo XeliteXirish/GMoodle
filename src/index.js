@@ -27,6 +27,9 @@ exports.isLoggedIn = function (req, res, next) {
 function init() {
     require('./database/driver').connect();
     initWeb();
+
+    // Start auto apply schedule for every sunday at 00:15
+    utils.startSchedule({hour: 0, minute: 15, dayOfWeek: 0})
 }
 
 function initWeb() {
