@@ -7,16 +7,26 @@ function login() {
     console.log(`Sending request so starting loading screen...`);
 
     toggleLoading(true);
-    toggleNotification(false);
+    toggleSuccessfulNotification(false);
+    toggleErrorNotification(false);
 
     $.post(`/apply`, {
         musername: username,
         mpassword: password,
         murl: moodleURL
-    }, function (data) {
-        console.log(`Received data: ${data}`);
+    }, function (res) {
+        console.log(`Received data: ${res}`);
 
-        toggleNotification(true, data);
+        toggleErrorNotification(false);
+        toggleSuccessfulNotification(true, res);
+
+        console.log(`Turning loading screen off!`);
+        toggleLoading(false);
+    }).fail(res => {
+        console.error(`Apply error'd with response: ${res.responseText}`);
+
+        toggleSuccessfulNotification(false);
+        toggleErrorNotification(true, res.responseText);
 
         console.log(`Turning loading screen off!`);
         toggleLoading(false);
@@ -28,9 +38,19 @@ function toggleLoading(show) {
     else $('#loading').attr('class', 'modal');
 }
 
-function toggleNotification(show, text) {
-    if (show) $('#infoNotification').show();
-    else $('#infoNotification').hide();
+function toggleSuccessfulNotification(show, text) {
+    const notif = $('#infoNotification');
+    if (show) notif.show();
+    else notif.hide();
 
-    $('#infoText').text(`Successful: ${text}`);
+    notif.text(`Successful: ${text}`);
+}
+
+function toggleErrorNotification(show, text) {
+    const notif = $('#errorNotification');
+    if (show) notif.show();
+    else notif.hide();
+
+
+    notif.text(`An error occurred: ${text}`);
 }

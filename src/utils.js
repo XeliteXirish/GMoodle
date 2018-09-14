@@ -222,7 +222,7 @@ exports.startSchedule = function (time) {
 
                 if (!moodleUsername || !moodlePassword || !moodleUrl || !accessToken) continue;
 
-                exports.runApply(user.id, moodleUsername, moodlePassword, moodleUrl, accessToken).catch(() => {
+                exports.runApply(user.id, moodleUsername, moodlePassword, moodleUrl, accessToken, true).catch(() => {
                     // Dont care it'll try again in a week
                 });
             }
@@ -240,9 +240,10 @@ exports.startSchedule = function (time) {
  * @param moodlePassword {String} - The moodle password of the user
  * @param moodleURL {String} - The base url for the users moodle site
  * @param accessToken - The access token for the users google account
+ * @param autoRan {Boolean} - If apply was ran automatically, default to false
  * @returns {Promise<Object>} - Object with key 'suc' and error message 'msg'
  */
-exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, accessToken) {
+exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, accessToken, autoRan = false) {
     try {
 
         let userObj = await schemaUtils.fetchUser(userID);
@@ -252,24 +253,24 @@ exports.runApply = async function (userID, moodleUsername, moodlePassword, moodl
         };
 
         // We'll check if their token is any good
-        let validToken = await utils.checkAccessToken(accessToken);
+        let validToken = await exports.checkAccessToken(accessToken);
         if (!validToken) {
-            accessToken = await utils.getAccessToken(userObj.refreshToken);
+            accessToken = await exports.getAccessToken(userObj.refreshToken);
         }
 
         // Check if the google calender exists or create it
-        let calender = await utils.getEventCalender(accessToken);
+        let calender = await exports.getEventCalender(accessToken);
         if (!calender) return {suc: false, msg: `Unable to fetch calender!`};
         let calenderID = calender.id;
 
         // Get the users current events to make sure we don't add duplicates, dont care about the length
-        let userEvents = await utils.listEvents(calenderID, accessToken);
+        let userEvents = await exports.listEvents(calenderID, accessToken);
 
         // Gets users assignments
-        let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
+        let assignments = await exports.getAssignments(moodleUsername, moodlePassword, moodleURL);
         if (!assignments) return {suc: false, msg: `Unable to log into moodle with the supplied credentials!`};
 
-        console.info(`${noteUser} Added ${chalk.red(assignments.length)} events for user ${chalk.bold(req.user.profile.displayName)}`);
+        console.info(`${(autoRan ? chalk.red('[AUTO RUN] ') : '')}${noteUser} Added ${chalk.red(assignments.length)} events for user ${chalk.bold(userObj.profile.name)}`);
 
         for (let ass of assignments) {
 
@@ -277,8 +278,15 @@ exports.runApply = async function (userID, moodleUsername, moodlePassword, moodl
             let dateTime = new Date(chrono.parseDate(`${ass.date}, ${new Date().getFullYear()}`)).toISOString();
 
             // Check if its a duplicate, if it doesn't insert it'll try again on next try
-            if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
+            if (!userEvents.includes(ass.name)) exports.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
             });
+        }
+
+        // Store their moodle credentials if they checked it if theyre not set
+        if (!userObj.moodleSettings.moodleUsername || !userObj.moodleSettings.moodlePassword || !userObj.moodleSettings.moodleURL) {
+            userObj.moodleSettings.moodleUsername = moodleUsername;
+            userObj.moodleSettings.moodlePassword = moodlePassword;
+            userObj.moodleSettings.moodleURL = moodleURL;
         }
 
         // Update the users last applied date and increment uses count

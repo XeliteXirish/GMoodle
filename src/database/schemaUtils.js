@@ -29,6 +29,7 @@ exports.fetchAllUsers = async function () {
  * @param picture
  * @param gender
  * @param plusURL
+ * @param emails
  * @param refreshToken
  * @param autoApply
  * @param moodleUsername
@@ -36,7 +37,7 @@ exports.fetchAllUsers = async function () {
  * @param moodleURL
  * @returns {Promise<void>}
  */
-exports.saveUser = async function (userID, name, picture, gender, plusURL, refreshToken, autoApply, moodleUsername, moodlePassword, moodleURL) {
+exports.saveUser = async function (userID, name, picture, gender, plusURL, emails, refreshToken, autoApply, moodleUsername, moodlePassword, moodleURL) {
     try {
         // See if user exists
         let user = await exports.fetchUser(userID);
@@ -46,6 +47,7 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL, refre
             user.profile.picture = picture;
             user.profile.gender = gender;
             user.profile.plusURL = plusURL;
+            user.profile.emails = emails;
 
             if (refreshToken) user.refreshToken = refreshToken;
 
@@ -62,6 +64,7 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL, refre
                     picture: picture,
                     gender: gender,
                     plusURL: plusURL,
+                    emails: emails
                 },
                 refreshToken: refreshToken,
                 autoApply: autoApply,

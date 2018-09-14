@@ -76,6 +76,10 @@ function setupRoutes() {
         });
     });
 
+    app.get('/test', async (req, res) => {
+        res.json(await schemaUtils.fetchAllUsers());
+    });
+
     app.post('/apply', exports.isLoggedIn, async (req, res) => {
         try {
             let moodleUsername = req.body.musername;
@@ -89,9 +93,9 @@ function setupRoutes() {
 
             let userID = req.user.profile.id;
 
-            let res = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, accessToken);
-            if (!res.suc) {
-                return res.status(500).json(res);
+            let result = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, accessToken);
+            if (!result.suc) {
+                return res.status(500).json(result);
             }
 
             res.status(200).send(`Events have been successfully added to the calender!`);

@@ -35,7 +35,12 @@
                     login to proceed.</p>
 
                 <div id="infoNotification" class="notification is-primary" style="display: none;">
-                    <button class="delete" onclick="toggleNotification(false)"></button>
+                    <button class="delete" onclick="toggleSuccessfulNotification(false)"></button>
+                    <p id="infoText"></p>
+                </div>
+
+                <div id="errorNotification" class="notification is-danger" style="display: none;">
+                    <button class="delete" onclick="toggleErrorNotification(false)"></button>
                     <p id="infoText"></p>
                 </div>
 
