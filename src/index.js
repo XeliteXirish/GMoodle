@@ -86,6 +86,8 @@ function setupRoutes() {
             let moodlePassword = req.body.mpassword;
             let moodleURL = req.body.murl;
 
+            let autoRenew = req.body.renew || false;
+
             if (!moodleUsername || !moodlePassword || !moodleURL) return res.status(403).send(`You must submit a muasname, mpassword and murl in the body!`);
 
             let accessToken = req.user.token || req.body.access_token;
@@ -93,7 +95,9 @@ function setupRoutes() {
 
             let userID = req.user.profile.id;
 
-            let result = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, accessToken);
+            // No point fetching another user obj here and setting their apply pref when we have it below
+
+            let result = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, autoRenew, accessToken);
             if (!result.suc) {
                 return res.status(500).json(result);
             }

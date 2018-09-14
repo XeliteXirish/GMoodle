@@ -239,11 +239,12 @@ exports.startSchedule = function (time) {
  * @param moodleUsername {String} - The moodle username of the user
  * @param moodlePassword {String} - The moodle password of the user
  * @param moodleURL {String} - The base url for the users moodle site
+ * @param autoRenew {Boolean} - If the users assignments should be auto renewed by the schedule
  * @param accessToken - The access token for the users google account
  * @param autoRan {Boolean} - If apply was ran automatically, default to false
  * @returns {Promise<Object>} - Object with key 'suc' and error message 'msg'
  */
-exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, accessToken, autoRan = false) {
+exports.runApply = async function (userID, moodleUsername, moodlePassword, moodleURL, autoRenew, accessToken, autoRan = false) {
     try {
 
         let userObj = await schemaUtils.fetchUser(userID);
@@ -291,6 +292,7 @@ exports.runApply = async function (userID, moodleUsername, moodlePassword, moodl
 
         // Update the users last applied date and increment uses count
         userObj.lastApplied = new Date().toISOString();
+        userObj.autoApply = autoRenew;
         userObj.numApplication++;
         userObj.save();
 

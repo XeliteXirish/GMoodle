@@ -3,7 +3,7 @@ function login() {
     let password = $('#password').val();
     let moodleURL = $('#murl').val();
 
-    let autoRenew = $('#autorenew').val();
+    let autoRenew = $('#autorenew').prop('checked');
     console.log(`Sending request so starting loading screen...`);
 
     toggleLoading(true);
@@ -13,7 +13,9 @@ function login() {
     $.post(`/apply`, {
         musername: username,
         mpassword: password,
-        murl: moodleURL
+        murl: moodleURL,
+        renew: autoRenew
+
     }, function (res) {
         console.log(`Received data: ${res}`);
 
