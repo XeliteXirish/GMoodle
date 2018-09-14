@@ -11,24 +11,47 @@ exports.fetchUser = async function (userID) {
 };
 
 /**
+ * Returns an array of all user objects
+ * @returns {Promise<Array>}
+ */
+exports.fetchAllUsers = async function () {
+    try {
+        return await driver.getModals().Account.find({}) || [];
+    } catch (err) {
+        console.error(`Unable to fetch all users, Error: ${err.stack}`)
+    }
+};
+
+/**
  * Save a new user to the database
  * @param userID
  * @param name
  * @param picture
  * @param gender
  * @param plusURL
+ * @param emails
+ * @param refreshToken
+ * @param autoApply
+ * @param moodleUsername
+ * @param moodlePassword
+ * @param moodleURL
  * @returns {Promise<void>}
  */
-exports.saveUser = async function (userID, name, picture, gender, plusURL) {
+exports.saveUser = async function (userID, name, picture, gender, plusURL, emails, refreshToken, autoApply, moodleUsername, moodlePassword, moodleURL) {
     try {
         // See if user exists
         let user = await exports.fetchUser(userID);
         if (user) {
             // They exist, so update their data
-            user.name = name;
-            user.picture = picture;
-            user.gender = gender;
-            user.plusURL = plusURL;
+            user.profile.name = name;
+            user.profile.picture = picture;
+            user.profile.gender = gender;
+            user.profile.plusURL = plusURL;
+            user.profile.emails = emails;
+
+            if (refreshToken) user.refreshToken = refreshToken;
+
+            // Don't want to update refresh token since we only get it once
 
             user.save();
 
@@ -36,10 +59,20 @@ exports.saveUser = async function (userID, name, picture, gender, plusURL) {
             // They dont exist, so create one
             let newUser = new driver.getModals().Account({
                 id: userID,
-                name: name,
-                picture: picture,
-                gender: gender,
-                plusURL: plusURL
+                profile: {
+                    name: name,
+                    picture: picture,
+                    gender: gender,
+                    plusURL: plusURL,
+                    emails: emails
+                },
+                refreshToken: refreshToken,
+                autoApply: autoApply,
+                moodleSettings: {
+                    moodleUsername: moodleUsername,
+                    moodlePassword: moodlePassword,
+                    moodleURL: moodleURL
+                }
             });
 
             newUser.save();

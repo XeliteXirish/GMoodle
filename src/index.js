@@ -4,9 +4,9 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const chalk = require('chalk');
 const cookieSession = require('cookie-session');
-const chrono = require('chrono-node');
 
-let utils = require('./utils');
+const utils = require('./utils');
+const schemaUtils = require('./database/schemaUtils');
 
 const app = exports.app = express();
 
@@ -27,6 +27,9 @@ exports.isLoggedIn = function (req, res, next) {
 function init() {
     require('./database/driver').connect();
     initWeb();
+
+    // Start auto apply schedule for every sunday at 00:15
+    utils.startSchedule({hour: 0, minute: 15, dayOfWeek: 0})
 }
 
 function initWeb() {
@@ -73,22 +76,8 @@ function setupRoutes() {
         });
     });
 
-    app.get('/listevents', exports.isLoggedIn, async (req, res) => {
-        try {
-
-            let accessToken = req.user.token;
-            if (!accessToken) return res.status(403).send(`No access token!`);
-
-            // Check if the google calender exists or create it
-            let calender = await utils.getEventCalender(accessToken);
-            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
-            let calenderID = calender.id;
-
-            return res.status(200).json(await utils.listEvents(calenderID, accessToken, true));
-
-        } catch (err) {
-            console.error(`Error trying to fetch events, Error: ${err.stack}`);
-        }
+    app.get('/test', async (req, res) => {
+        res.json(await schemaUtils.fetchAllUsers());
     });
 
     app.post('/apply', exports.isLoggedIn, async (req, res) => {
@@ -97,39 +86,27 @@ function setupRoutes() {
             let moodlePassword = req.body.mpassword;
             let moodleURL = req.body.murl;
 
+            let autoRenew = req.body.renew || false;
+
             if (!moodleUsername || !moodlePassword || !moodleURL) return res.status(403).send(`You must submit a muasname, mpassword and murl in the body!`);
 
-            let accessToken = req.user.token;
+            let accessToken = req.user.token || req.body.access_token;
             if (!accessToken) return res.status(403).send(`No access token!`);
 
-            // Check if the google calender exists or create it
-            let calender = await utils.getEventCalender(accessToken);
-            if (!calender) return res.status(500).send(`Unable to fetch calender!`);
-            let calenderID = calender.id;
+            let userID = req.user.profile.id;
 
-            // Get the users current events to make sure we don't add duplicates, dont care about the length
-            let userEvents = await utils.listEvents(calenderID, accessToken);
+            // No point fetching another user obj here and setting their apply pref when we have it below
 
-            // Gets users assignments
-            let assignments = await utils.getAssignments(moodleUsername, moodlePassword, moodleURL);
-            if (!assignments) return res.status(403).send(`Unable to log into moodle with the supplied credentials!`);
-
-            console.info(`${notification} Added events for user ${chalk.bold(req.user.profile.displayName)}`);
-
-            for (let ass of assignments) {
-
-                // We gota parse the date, Format = Friday, 7 September, 5:00 PM
-                let dateTime = new Date(chrono.parseDate(`${ass.date}, 2018`)).toISOString();
-
-                // Check if its a duplicate, if it doesn't insert it'll try again on next try
-                if (!userEvents.includes(ass.name)) utils.insetEvent(calenderID, ass.name, ass.course, dateTime, accessToken).catch(err => {
-                });
+            let result = await utils.runApply(userID, moodleUsername, moodlePassword, moodleURL, autoRenew, accessToken);
+            if (!result.suc) {
+                return res.status(500).json(result);
             }
 
-            res.status(200).send(`Events have been successfully added to calender!`);
+            res.status(200).send(`Events have been successfully added to the calender!`);
 
         } catch (err) {
             console.error(`Error trying to apply events, Error: ${err.stack}`);
+            res.status(500).send(`An unexpected server error occurred, please contact @XeliteXirish or try again later!`);
         }
     })
 }

@@ -5,7 +5,7 @@ const schemaUtils = require('../database/schemaUtils');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-auth').Strategy;
 
-const SCOPES = ['https://www.googleapis.com/auth/calendar', 'profile'];
+const SCOPES = ['https://www.googleapis.com/auth/calendar', 'profile', 'email'];
 
 exports.init = function (app) {
     app.use(passport.initialize());
@@ -34,7 +34,7 @@ exports.init = function (app) {
         },
         (token, refreshToken, profile, done) => {
 
-            schemaUtils.saveUser(profile.id, profile.displayName, profile.image.url, profile.gender, profile.url).catch(err => {
+            schemaUtils.saveUser(profile.id, profile.displayName, profile.image.url, profile.gender, profile.url, profile.emails, refreshToken).catch(err => {
                 // Umm do something in the comments :D #NoError
             });
 
