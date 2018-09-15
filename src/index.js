@@ -70,14 +70,22 @@ function initWeb() {
 
 function setupRoutes() {
 
-    app.get('/', exports.isLoggedIn, (req, res) => {
-        res.render('index', {
-            user: req.user
-        });
+    app.get('/', (req, res) => {
+        try {
+            res.render('index', {});
+        } catch (err) {
+            console.error(`Unable to render index page, Error: ${err.stack}`);
+        }
     });
 
-    app.get('/test', async (req, res) => {
-        res.json(await schemaUtils.fetchAllUsers());
+    app.get('/apply', exports.isLoggedIn, (req, res) => {
+        try {
+            res.render('apply', {
+                user: req.user
+            });
+        } catch (err) {
+            console.error(`Unable to render apply page, Error: ${err.stack}`);
+        }
     });
 
     app.post('/apply', exports.isLoggedIn, async (req, res) => {

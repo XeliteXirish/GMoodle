@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <% include partials/header.ejs %>
+
+    <title>Apply - G-Moodle</title>
+
+</head>
+
+<body>
+
+<div id="loading" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">
+        <div class="spinner">
+            <div class="cube1"></div>
+            <div class="cube2"></div>
+        </div>
+    </div>
+</div>
+
+<section class="hero is-success is-fullheight">
+    <div class="hero-body">
+        <div class="container has-text-centered">
+            <div class="column is-6 is-offset-3">
+                <h3 class="title text-offwhite is-1">&bull;&nbsp;Moodle Account Login&nbsp;&bull;</h3>
+                <p class="subtitle text-offwhite">We require your moodle login to list your due assignments, please
+                    login to proceed.</p>
+
+                <div id="infoNotification" class="notification is-primary" style="display: none;">
+                    <button class="delete" onclick="toggleSuccessfulNotification(false)"></button>
+                    <p id="infoText"></p>
+                </div>
+
+                <div id="errorNotification" class="notification is-danger" style="display: none;">
+                    <button class="delete" onclick="toggleErrorNotification(false)"></button>
+                    <p id="infoText"></p>
+                </div>
+
+                <div class="box">
+                    <figure class="avatar">
+                        <img src="<%- user.profile.image.url.replace('?sz=50', '?sz=200') %>">
+                    </figure>
+                    <div class="field">
+                        <div class="control">
+                            <label for="username">&bull;&nbsp;Moodle Username:</label>
+                            <input id="username" class="input is-large" type="text" placeholder="Moodle Username"
+                                   name="musername" autofocus="">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <div class="control">
+                            <label for="password">&bull;&nbsp;Moodle Password:</label>
+                            <input id="password" class="input is-large" type="password" placeholder="Moodle Password"
+                                   name="mpassword">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <br>
+
+                    <div class="field">
+                        <div class="control">
+                            <label for="murl">&bull;&nbsp;Base Moodle URL:</label>
+                            <input id="murl" class="input is-large" type="url"
+                                   placeholder="Base Moodle URL, Eg: https://moodle.wit.ie" name="murl">
+                        </div>
+                    </div>
+                    <br>
+                    <div class="field">
+                        <label class="checkbox">
+                            <input id="autorenew" type="checkbox">
+                            Auto update every Sunday<br/>~ This always updates your saved preference! ~
+                        </label>
+                    </div>
+                    <br>
+                    <button class="button is-block is-info is-large is-fullwidth" onclick="login()"><b>Apply assignment
+                            events!</b></button>
+                </div>
+                <br>
+                <p class="has-text-grey">
+                    <a href="/logout">Log Out</a> &nbsp;·&nbsp;
+                    <a href="https://github.com/XeliteXirish/GMoodle">Source Code</a> &nbsp;·&nbsp;
+                    <a href="https://twitter.com/XeliteXirish">Need to contact me?</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<% include partials/footer.ejs %>
+
+<script src="/js/apply.js"></script>
+
+</body>
+</html>
